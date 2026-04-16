@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>나만의 공부 플래너</title>
+<style>
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f4f4f5;
+  --color-border-secondary: #d4d4d8;
+  --color-border-tertiary: #e4e4e7;
+  --color-text-primary: #18181b;
+  --color-text-secondary: #71717a;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}
+body { background: var(--color-background-secondary); padding: 20px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;}
+
+/* 앱 & 로그인 컨테이너 공통 */
+.container-wrapper { width: 100%; max-width: 900px; }
+.panel{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:18px;box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+
+/* 로그인 / 회원가입 화면 */
+#auth-container { max-width: 360px; margin: 80px auto 0; text-align: center; }
+#auth-container h1 { font-size: 20px; color: var(--color-text-primary); margin-bottom: 20px; }
+.auth-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--color-border-secondary); border-radius: var(--border-radius-md); font-size: 14px; outline: none; }
+.auth-input:focus { border-color: #7F77DD; }
+.auth-btn { width: 100%; padding: 12px; background: #7F77DD; color: white; border: none; border-radius: var(--border-radius-md); font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+.auth-btn:hover { background: #534AB7; }
+.auth-link { font-size: 13px; color: var(--color-text-secondary); cursor: pointer; text-decoration: underline; background: none; border: none; }
+.auth-link:hover { color: var(--color-text-primary); }
+
+/* 메인 앱 (로그인 후) */
+#app-container { display: none; }
+.app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px; }
+.app-header h2 { font-size: 18px; color: var(--color-text-primary); }
+.logout-btn { padding: 6px 12px; font-size: 12px; background: white; border: 1px solid var(--color-border-secondary); border-radius: var(--border-radius-md); cursor: pointer; color: var(--color-text-secondary); }
+.logout-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+
+.app{display:grid;grid-template-columns:260px 1fr;gap:14px;min-height:640px}
+.sec{font-size:11px;font-weight:600;color:var(--color-text-secondary);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:12px}
+.divider{height:1px;background:var(--color-border-tertiary);margin:15px 0}
+.subject-list,.event-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.subject-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--border-radius-md);cursor:pointer; transition: background 0.1s;}
+.subject-item:hover{background:var(--color-background-secondary)}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sname{font-size:13px;color:var(--color-text-primary);flex:1}
+.scnt{font-size:12px;color:var(--color-text-secondary)}
+.add-btn{width:100%;padding:8px;border:1px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-secondary);font-size:12px;cursor:pointer}
+.add-btn:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.form-box{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.form-box input,.form-box select{padding:8px 10px;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:12px;outline:none;width:100%}
+.form-box input:focus,.form-box select:focus{border-color:#7F77DD}
+.submit-btn{padding:8px 12px;background:#7F77DD;color:white;border:none;border-radius:var(--border-radius-md);font-size:12px;cursor:pointer;width:100%}
+.submit-btn:hover{background:#534AB7}
+.color-pick{display:flex;gap:6px;flex-wrap:wrap; padding: 4px 0;}
+.swatch{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.swatch.sel{border-color:var(--color-text-primary)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;text-align:center}
+.stat-val{font-size:22px;font-weight:600;color:var(--color-text-primary)}
+.stat-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:4px}
+.streak-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0}
+.streak-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;text-align:center}
+.streak-val{font-size:22px;font-weight:600;color:#7F77DD}
+.streak-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:4px}
+.right-col{display:flex;flex-direction:column;gap:14px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-nav{background:transparent;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);width:28px;height:28px;cursor:pointer;color:var(--color-text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center}
+.cal-nav:hover{background:var(--color-background-secondary)}
+.cal-month{font-size:15px;font-weight:600;color:var(--color-text-primary)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-lbl{font-size:12px;color:var(--color-text-secondary);text-align:center;padding:4px 0;font-weight:600}
+.cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:var(--border-radius-md);font-size:13px;color:var(--color-text-primary);cursor:pointer;position:relative;flex-direction:column;transition:background 0.1s}
+.cal-cell:hover{background:var(--color-background-secondary)}
+.cal-cell.today{background:#CECBF6;color:#3C3489;font-weight:600}
+.cal-cell.selected{background:#AFA9EC;color:#26215C;font-weight:600}
+.cal-cell.other{color:var(--color-text-secondary);opacity:0.4}
+.cal-cell.studied{box-shadow:inset 0 -3px 0 #7F77DD}
+.cal-cell.today.studied,.cal-cell.selected.studied{box-shadow:inset 0 -3px 0 #26215C}
+.dot-row{display:flex;gap:3px;position:absolute;bottom:4px;left:50%;transform:translateX(-50%)}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.task-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.task-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md)}
+.task-item.done .task-text{text-decoration:line-through;color:var(--color-text-secondary)}
+.chk{width:16px;height:16px;border-radius:4px;border:1px solid var(--color-border-secondary);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.1s}
+.chk.on{background:#7F77DD;border-color:#7F77DD}
+.chk.on::after{content:'✓';color:white;font-size:10px}
+.task-text{font-size:13px;color:var(--color-text-primary);flex:1}
+.badge{font-size:11px;padding:3px 8px;border-radius:var(--border-radius-md); font-weight: 500;}
+.del-btn{background:transparent;border:none;color:var(--color-text-secondary);cursor:pointer;font-size:14px;opacity:0;transition:opacity 0.1s}
+.task-item:hover .del-btn{opacity:1}
+.add-task-row{display:flex;gap:8px;margin-top:12px}
+.add-task-row input,.add-task-row select{padding:8px 10px;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:12px;outline:none}
+.add-task-row input{flex:1}
+.add-task-row select{max-width:100px}
+.add-task-row .submit-btn{width:auto;white-space:nowrap}
+.event-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--border-radius-md);border:1px solid var(--color-border-tertiary)}
+.event-info{flex:1;min-width:0}
+.event-name{font-size:13px;font-weight:600;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event-date-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.dday{font-size:13px;font-weight:600;padding:4px 10px;border-radius:var(--border-radius-md)}
+.dday.past{background:#F1EFE8;color:#5F5E5A}
+.dday.today-ev{background:#CECBF6;color:#3C3489}
+.dday.soon{background:#FAECE7;color:#993C1D}
+.dday.future{background:#E1F5EE;color:#0F6E56}
+.event-del{background:transparent;border:none;color:var(--color-text-secondary);cursor:pointer;font-size:13px;opacity:0}
+.event-item:hover .event-del{opacity:1}
+.empty{font-size:13px;color:var(--color-text-secondary);text-align:center;padding:18px 0}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{flex:1;padding:8px;background:transparent;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:13px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;text-align:center}
+.tab.active{background:#7F77DD;color:white;border-color:#7F77DD}
+</style>
+</head>
+<body>
+
+<div class="container-wrapper">
+  
+  <div id="auth-container" class="panel">
+    
+    <div id="login-section">
+      <h1>공부 플래너 시작하기</h1>
+      <input type="text" id="login-id" class="auth-input" placeholder="아이디">
+      <input type="password" id="login-pw" class="auth-input" placeholder="비밀번호" onkeydown="if(event.key==='Enter')login()">
+      <button class="auth-btn" onclick="login()">로그인</button>
+      <button class="auth-link" onclick="toggleAuth('signup')">아직 계정이 없으신가요? 회원가입</button>
+    </div>
+
+    <div id="signup-section" style="display:none;">
+      <h1>회원가입</h1>
+      <input type="text" id="sign-id" class="auth-input" placeholder="사용할 아이디">
+      <input type="text" id="sign-nick" class="auth-input" placeholder="닉네임 (예: 열공러)">
+      <input type="password" id="sign-pw" class="auth-input" placeholder="비밀번호">
+      <input type="password" id="sign-pw2" class="auth-input" placeholder="비밀번호 확인">
+      <button class="auth-btn" onclick="signup()">가입 완료하기</button>
+      <button class="auth-link" onclick="toggleAuth('login')">이미 계정이 있으신가요? 로그인</button>
+    </div>
+
+  </div>
+
+  <div id="app-container">
+    <div class="app-header">
+      <h2 id="welcome-msg">플래너</h2>
+      <button class="logout-btn" onclick="logout()">로그아웃</button>
+    </div>
+
+    <div class="app">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="panel">
+          <p class="sec">과목</p>
+          <div class="subject-list" id="subject-list"></div>
+          <button class="add-btn" onclick="toggleForm('subj-form')">+ 과목 추가</button>
+          <div id="subj-form" style="display:none" class="form-box">
+            <input id="subj-name" placeholder="과목 이름" />
+            <div class="color-pick" id="color-pick"></div>
+            <button class="submit-btn" onclick="addSubject()">추가</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <p class="sec">연속 학습일</p>
+          <div class="streak-row">
+            <div class="streak-card"><div class="streak-val" id="streak-cur">0</div><div class="streak-lbl">🔥 현재 연속</div></div>
+            <div class="streak-card"><div class="streak-val" id="streak-best">0</div><div class="streak-lbl">🏆 최고 기록</div></div>
+          </div>
+          <div class="divider"></div>
+          <p class="sec">오늘 통계</p>
+          <div class="stat-row" id="stat-row"></div>
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="panel">
+          <div class="cal-header">
+            <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
+            <span class="cal-month" id="cal-month"></span>
+            <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="panel">
+            <div class="tabs">
+              <button class="tab active" id="tab-task" onclick="switchTab('task')">할 일</button>
+              <button class="tab" id="tab-event" onclick="switchTab('event')">일정</button>
+            </div>
+            <div id="pane-task">
+              <p class="sec" id="task-date-lbl">오늘 할 일</p>
+              <div class="task-list" id="task-list"></div>
+              <div class="add-task-row">
+                <input id="new-task" placeholder="할 일..." onkeydown="if(event.key==='Enter')addTask()" />
+                <select id="task-subj"></select>
+                <button class="submit-btn" onclick="addTask()">추가</button>
+              </div>
+            </div>
+            <div id="pane-event" style="display:none">
+              <p class="sec">일정 추가</p>
+              <div class="form-box">
+                <select id="event-type">
+                  <option value="exam">시험</option>
+                  <option value="perf">수행평가</option>
+                  <option value="quiz">쪽지시험</option>
+                  <option value="submit">제출</option>
+                  <option value="etc">기타</option>
+                </select>
+                <input id="event-name" placeholder="일정 이름" />
+                <input id="event-date" type="date" />
+                <button class="submit-btn" onclick="addEvent()">등록</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <p class="sec">다가오는 일정</p>
+            <div class="event-list" id="event-list" style="max-height:300px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* 상수 및 기본 설정 */
+const COLORS=['#7F77DD','#1D9E75','#D85A30','#D4537E','#378ADD','#639922','#BA7517'];
+const TYPE_LABEL={exam:'시험',perf:'수행평가',quiz:'쪽지시험',submit:'제출',etc:'기타'};
+const TYPE_COLOR={exam:'#D85A30',perf:'#7F77DD',quiz:'#BA7517',submit:'#378ADD',etc:'#888780'};
+
+/* 로그인 관련 상태 */
+let currentUser = null;
+let currentNick = "";
+
+/* 플래너 데이터 상태 (기본 템플릿 포함) */
+let subjects = [];
+let tasks = [];
+let events = [];
+let studiedDates = new Set();
+let nextId = 1;
+let selColor = COLORS[0];
+let viewYear, viewMonth, selectedDate;
+let activeTab = 'task';
+
+const DEFAULT_SUBJECTS = [
+  {id:1001,name:'수학',color:'#7F77DD'},
+  {id:1002,name:'영어',color:'#1D9E75'}
+];
+
+/* 유틸 함수 */
+function todayStr(){const d=new Date();return fmt(d);}
+function fmt(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function pad(n){return String(n).padStart(2,'0');}
+function diffDays(dateStr){
+  const t=new Date(todayStr());const e=new Date(dateStr);
+  return Math.round((e-t)/(1000*60*60*24));
+}
+function fmtLabel(str){
+  const[y,m,d]=str.split('-');
+  return y+'년 '+parseInt(m)+'월 '+parseInt(d)+'일';
+}
+
+/* ---------------- 로그인 & 저장 관련 ---------------- */
+function checkAuth() {
+  const savedUser = localStorage.getItem('planner_currentUser');
+  if(savedUser) {
+    const users = JSON.parse(localStorage.getItem('planner_users')) || {};
+    if(users[savedUser]) {
+      currentUser = savedUser;
+      currentNick = users[savedUser].nick;
+      showApp();
+      return;
+    }
+  }
+  showAuth('login');
+}
+
+function toggleAuth(type) {
+  document.getElementById('login-section').style.display = type === 'login' ? 'block' : 'none';
+  document.getElementById('signup-section').style.display = type === 'signup' ? 'block' : 'none';
+}
+function showAuth(type) {
+  document.getElementById('app-container').style.display = 'none';
+  document.getElementById('auth-container').style.display = 'block';
+  toggleAuth(type);
+}
+
+function signup() {
+  const id = document.getElementById('sign-id').value.trim();
+  const nick = document.getElementById('sign-nick').value.trim();
+  const pw = document.getElementById('sign-pw').value;
+  const pw2 = document.getElementById('sign-pw2').value;
+
+  if(!id || !nick || !pw) { alert("모든 항목을 입력해주세요."); return; }
+  if(pw !== pw2) { alert("비밀번호가 일치하지 않습니다. 다시 확인해주세요."); return; }
+
+  let users = JSON.parse(localStorage.getItem('planner_users')) || {};
+  if(users[id]) { alert("이미 존재하는 아이디입니다."); return; }
+
+  users[id] = { pw: pw, nick: nick };
+  localStorage.setItem('planner_users', JSON.stringify(users));
+  
+  alert("회원가입이 완료되었습니다! 로그인해주세요.");
+  toggleAuth('login');
+  
+  // 입력창 초기화
+  document.getElementById('sign-id').value = '';
+  document.getElementById('sign-nick').value = '';
+  document.getElementById('sign-pw').value = '';
+  document.getElementById('sign-pw2').value = '';
+}
+
+function login() {
+  const id = document.getElementById('login-id').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  let users = JSON.parse(localStorage.getItem('planner_users')) || {};
+
+  if(!users[id] || users[id].pw !== pw) {
+    alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+    return;
+  }
+
+  currentUser = id;
+  currentNick = users[id].nick;
+  localStorage.setItem('planner_currentUser', id);
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-pw').value = '';
+  showApp();
+}
+
+function logout() {
+  currentUser = null;
+  currentNick = "";
+  localStorage.removeItem('planner_currentUser');
+  showAuth('login');
+}
+
+/* ---------------- 데이터 로드 & 저장 ---------------- */
+function loadData() {
+  const dataRaw = localStorage.getItem('planner_data_' + currentUser);
+  if(dataRaw) {
+    const data = JSON.parse(dataRaw);
+    subjects = data.subjects || [];
+    tasks = data.tasks || [];
+    events = data.events || [];
+    nextId = data.nextId || 1;
+  } else {
+    // 첫 로그인 시 기본 데이터 부여
+    subjects = [...DEFAULT_SUBJECTS];
+    tasks = [];
+    events = [];
+    nextId = 2000;
+  }
+}
+
+function saveData() {
+  if(!currentUser) return;
+  const data = { subjects, tasks, events, nextId };
+  localStorage.setItem('planner_data_' + currentUser, JSON.stringify(data));
+}
+
+/* ---------------- 앱 렌더링 ---------------- */
+function showApp() {
+  document.getElementById('auth-container').style.display = 'none';
+  document.getElementById('app-container').style.display = 'block';
+  document.getElementById('welcome-msg').textContent = `환영합니다, ${currentNick}님! 🚀`;
+  
+  loadData();
+  const now = new Date();
+  viewYear = now.getFullYear(); 
+  viewMonth = now.getMonth(); 
+  selectedDate = todayStr();
+  
+  const ei = document.getElementById('event-date');
+  if(ei) ei.value = todayStr();
+  
+  renderColorPick();
+  renderAll();
+}
+
+function renderAll(){
+  computeStreakAndStudied();
+  renderSubjects(); renderCalendar(); renderTasks(); renderStats(); renderSubjectSelect(); renderEvents(); renderStreak();
+  saveData(); // 화면이 업데이트 될 때마다 자동 저장
+}
+
+function computeStreakAndStudied(){
+  studiedDates=new Set();
+  tasks.forEach(t=>{if(t.done)studiedDates.add(t.date);});
+}
+
+function computeStreaks(){
+  const today=new Date(todayStr());
+  let cur=0,best=0;
+  
+  // 1. 현재 연속(cur) 계산
+  let d=new Date(today);
+  // 오늘 아직 공부를 체크하지 않았다면, '어제'를 기준으로 연속 기록을 세도록 수정
+  if(!studiedDates.has(fmt(d))) {
+    d.setDate(d.getDate()-1);
+  }
+  
+  let tmp=0;
+  while(true){
+    if(studiedDates.has(fmt(d))){
+      tmp++;
+      d.setDate(d.getDate()-1);
+    }else{
+      break;
+    }
+  }
+  cur=tmp;
+
+  // 2. 최고 기록(best) 계산
+  const allDates=[...studiedDates].sort();
+  if(allDates.length){
+    let run=1,mx=1;
+    for(let i=1;i<allDates.length;i++){
+      const prev=new Date(allDates[i-1]);
+      prev.setDate(prev.getDate()+1);
+      if(fmt(prev)===allDates[i]){run++;}else{run=1;}
+      if(run>mx)mx=run;
+    }
+    best=mx;
+  }
+  return{cur,best};
+}
+
+function renderStreak(){
+  const{cur,best}=computeStreaks();
+  document.getElementById('streak-cur').textContent=cur+'일';
+  document.getElementById('streak-best').textContent=best+'일';
+}
+
+function renderSubjects(){
+  const el=document.getElementById('subject-list');el.innerHTML='';
+  subjects.forEach(s=>{
+    const cnt=tasks.filter(t=>t.subjectId===s.id&&!t.done).length;
+    const div=document.createElement('div');div.className='subject-item';
+    div.innerHTML=`<span class="dot" style="background:${s.color}"></span><span class="sname">${s.name}</span><span class="scnt">${cnt}</span>`;
+    el.appendChild(div);
+  });
+}
+
+function renderCalendar(){
+  document.getElementById('cal-month').textContent=viewYear+'년 '+(viewMonth+1)+'월';
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  ['일','월','화','수','목','금','토'].forEach(d=>{
+    const l=document.createElement('div');l.className='cal-lbl';l.textContent=d;grid.appendChild(l);
+  });
+  const first=new Date(viewYear,viewMonth,1);
+  const last=new Date(viewYear,viewMonth+1,0);
+  const startDay=first.getDay();
+  for(let i=0;i<startDay;i++){
+    const dt=new Date(viewYear,viewMonth,1-startDay+i);addCell(grid,dt,true);
+  }
+  for(let d=1;d<=last.getDate();d++){addCell(grid,new Date(viewYear,viewMonth,d),false);}
+  const rem=(7-((startDay+last.getDate())%7))%7;
+  for(let i=1;i<=rem;i++){addCell(grid,new Date(viewYear,viewMonth+1,i),true);}
+}
+
+function addCell(grid,dt,other){
+  const str=fmt(dt);
+  const dayEvents=events.filter(e=>e.date===str);
+  const isStudied=studiedDates.has(str);
+  const cell=document.createElement('div');
+  let cls='cal-cell'+(other?' other':'')+(str===todayStr()?' today':'')+(str===selectedDate&&str!==todayStr()?' selected':'')+(isStudied?' studied':'');
+  cell.className=cls;
+  cell.innerHTML=`<span>${dt.getDate()}</span>`;
+  if(dayEvents.length){
+    const dr=document.createElement('div');dr.className='dot-row';
+    dayEvents.slice(0,3).forEach(ev=>{
+      const dd=document.createElement('div');dd.className='cal-dot';dd.style.background=TYPE_COLOR[ev.type]||'#888';dr.appendChild(dd);
+    });
+    cell.appendChild(dr);
+  }
+  cell.onclick=()=>{selectedDate=str;renderAll();};
+  grid.appendChild(cell);
+}
+
+function renderTasks(){
+  const lbl=document.getElementById('task-date-lbl');
+  lbl.textContent=selectedDate===todayStr()?'오늘 할 일':fmtLabel(selectedDate)+' 할 일';
+  const list=document.getElementById('task-list');
+  const fil=tasks.filter(t=>t.date===selectedDate);
+  list.innerHTML='';
+  if(!fil.length){const em=document.createElement('div');em.className='empty';em.textContent='할 일 없음';list.appendChild(em);return;}
+  fil.forEach(t=>{
+    const s=subjects.find(s=>s.id===t.subjectId);
+    const row=document.createElement('div');row.className='task-item'+(t.done?' done':'');
+    row.innerHTML=`<div class="chk${t.done?' on':''}" onclick="toggleTask(${t.id})"></div><span class="task-text">${t.text}</span>${s?`<span class="badge" style="background:${s.color}22;color:${s.color}">${s.name}</span>`:''}<button class="del-btn" onclick="deleteTask(${t.id})">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+function renderStats(){
+  const tod=tasks.filter(t=>t.date===todayStr());
+  const done=tod.filter(t=>t.done).length;
+  const total=tod.length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('stat-row').innerHTML=`<div class="stat-card"><div class="stat-val">${total}</div><div class="stat-lbl">오늘 할 일</div></div><div class="stat-card"><div class="stat-val">${done}</div><div class="stat-lbl">완료</div></div><div class="stat-card"><div class="stat-val">${pct}%</div><div class="stat-lbl">달성률</div></div>`;
+}
+
+function renderSubjectSelect(){
+  const sel=document.getElementById('task-subj');sel.innerHTML='';
+  if(!subjects.length) {
+    sel.innerHTML='<option value="">과목 없음</option>'; return;
+  }
+  subjects.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
+}
+
+function renderEvents(){
+  const el=document.getElementById('event-list');el.innerHTML='';
+  const sorted=[...events].sort((a,b)=>a.date.localeCompare(b.date));
+  if(!sorted.length){const em=document.createElement('div');em.className='empty';em.textContent='등록된 일정 없음';el.appendChild(em);return;}
+  sorted.forEach(ev=>{
+    const diff=diffDays(ev.date);
+    let ddayText,ddayCls;
+    if(diff<0){ddayText='D+'+Math.abs(diff);ddayCls='past';}
+    else if(diff===0){ddayText='D-Day';ddayCls='today-ev';}
+    else if(diff<=7){ddayText='D-'+diff;ddayCls='soon';}
+    else{ddayText='D-'+diff;ddayCls='future';}
+    const row=document.createElement('div');row.className='event-item';
+    row.innerHTML=`<span class="badge" style="background:${TYPE_COLOR[ev.type]}22;color:${TYPE_COLOR[ev.type]}">${TYPE_LABEL[ev.type]}</span><div class="event-info"><div class="event-name">${ev.name}</div><div class="event-date-lbl">${fmtLabel(ev.date)}</div></div><span class="dday ${ddayCls}">${ddayText}</span><button class="event-del" onclick="deleteEvent(${ev.id})">✕</button>`;
+    el.appendChild(row);
+  });
+}
+
+function renderColorPick(){
+  const el=document.getElementById('color-pick');if(!el)return;el.innerHTML='';
+  COLORS.forEach(c=>{
+    const s=document.createElement('div');s.className='swatch'+(c===selColor?' sel':'');s.style.background=c;
+    s.onclick=()=>{selColor=c;renderColorPick();};
+    el.appendChild(s);
+  });
+}
+
+function toggleForm(id){const f=document.getElementById(id);f.style.display=f.style.display==='none'?'flex':'none';f.style.flexDirection='column';}
+function switchTab(t){
+  activeTab=t;
+  document.getElementById('pane-task').style.display=t==='task'?'block':'none';
+  document.getElementById('pane-event').style.display=t==='event'?'block':'none';
+  document.getElementById('tab-task').className='tab'+(t==='task'?' active':'');
+  document.getElementById('tab-event').className='tab'+(t==='event'?' active':'');
+}
+
+function addSubject(){
+  const n=document.getElementById('subj-name').value.trim();if(!n)return;
+  subjects.push({id:nextId++,name:n,color:selColor});
+  document.getElementById('subj-name').value='';
+  document.getElementById('subj-form').style.display='none';
+  renderAll();
+}
+function addTask(){
+  const t=document.getElementById('new-task').value.trim();if(!t)return;
+  const sId=parseInt(document.getElementById('task-subj').value)||subjects[0]?.id;
+  tasks.push({id:nextId++,text:t,subjectId:sId,date:selectedDate,done:false});
+  document.getElementById('new-task').value='';renderAll();
+}
+function toggleTask(id){const t=tasks.find(t=>t.id===id);if(t){t.done=!t.done;}renderAll();}
+function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);renderAll();}
+function addEvent(){
+  const name=document.getElementById('event-name').value.trim();
+  const date=document.getElementById('event-date').value;
+  const type=document.getElementById('event-type').value;
+  if(!name||!date)return;
+  events.push({id:nextId++,type,name,date});
+  document.getElementById('event-name').value='';renderAll();
+}
+function deleteEvent(id){events=events.filter(e=>e.id!==id);renderAll();}
+function changeMonth(dir){viewMonth+=dir;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}renderCalendar();}
+
+// 앱 진입점
+checkAuth();
+</script>
+</body>
+</html>
